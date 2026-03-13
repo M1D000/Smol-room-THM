@@ -131,8 +131,8 @@ http://www.smol.thm/wp-admin/index.php?cmd=whoami
 
 ![](24wget.png)
 ### Then we have to convert this zip file to hash password because it's a formula can *john and ripper* tool can understand by *zip2john* tool
-![](25zip2john.png)
 
+![](25zip2john.png)
 ### Now we can crack this hash with *john and ripper*
 ![](26zip%20pass.png)
 ### After access this directory we got *wp-config* file which has interesting credentials
