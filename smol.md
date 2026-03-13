@@ -17,11 +17,11 @@
 
 ## 🔭 Overview
 
->At the heart of **Smol** is a WordPress website, a common target due to its extensive plugin ecosystem. The machine showcases a publicly known vulnerable plugin, highlighting the risks of neglecting software updates and security patches. Enhancing the learning experience, Smol introduces a backdoored plugin, emphasizing the significance of meticulous code inspection before integrating third-party components.
+### At the heart of **Smol** is a WordPress website, a common target due to its extensive plugin ecosystem. The machine showcases a publicly known vulnerable plugin, highlighting the risks of neglecting software updates and security patches. Enhancing the learning experience, Smol introduces a backdoored plugin, emphasizing the significance of meticulous code inspection before integrating third-party components.
 
-**Objective:** [e.g., Compromise a vulnerable WordPress server and escalate to root]
+###  Objective: [e.g., Compromise a vulnerable WordPress server and escalate to root]
 
-**Skills Used:**
+### Skills Used:
 
 - [e.g., Port Scanning with Nmap]
 - [e.g., Web Application Exploitation]
@@ -33,7 +33,7 @@
 ## 🔍 Reconnaissance
 
 ### Nmap Scan
-We found two open ports and we will check the web application.
+### We found two open ports and we will check the web application.
 
 ![](images/1nmap.png)
 
@@ -42,104 +42,104 @@ We found two open ports and we will check the web application.
 ## 🔎 Enumeration
 
 ### Web Enumeration
-Using *gobuster*, we found some directories that redirect to *www.smol.thm*, so we added this URL to */etc/hosts*
+### Using *gobuster*, we found some directories that redirect to www.smol.thm, so we added this URL to */etc/hosts*
 ![](./images/2gobuster.png)
 
-From these directories we discovered a *WordPress* server, so we used *wpscan* to enumerate plugins, users, and themes for any credentials or vulnerable plugins.
+### From these directories we discovered a *WordPress* server, so we used *wpscan* to enumerate plugins, users, and themes for any credentials or vulnerable plugins.
 
 ![](./images/3wpscan.png)
 
-We found a vulnerable plugin called *JSmol* that has two CVEs (XSS, SSRF).
+### We found a vulnerable plugin called *JSmol* that has two CVEs (XSS, SSRF).
 
 ---
 
 ## 💥 Exploitation
 
-After our research, we discovered that we can exploit this SSRF vulnerability to get an interesting file called *wp-config* containing some information and credentials via *LFI*.
+### After our research, we discovered that we can exploit this SSRF vulnerability to get an interesting file called *wp-config* containing some information and credentials via *LFI*.
 ```
 http://www.smol.thm/wp-content/plugins/jsmol2wp/php/jsmol.php?isform=true&call=getRawDataFromDatabase&query=php://filter/resource=../../../../wp-config.php
 ```
 
 ![](./images/5wpconfig.png)
 
- We found credentials that we can use in the *wp-login.php* page.
+### We found credentials that we can use in the *wp-login.php* page.
  ![](./images/6login.png)
 
-After some crawling on this site, we found an interesting page.
+### After some crawling on this site, we found an interesting page.
 
 
 ![](./images/7page.png)
 
 
 ![](./images/7page.png)
- This page contains information about a common plugin called *Hello Dolly*.
+### This page contains information about a common plugin called *Hello Dolly*.
  ![](./images/8hellodollyplugin.png)
- Now, we wanted to know the PHP file of this plugin, so we did a quick search and discovered its name and path.
+### Now, we wanted to know the PHP file of this plugin, so we did a quick search and discovered its name and path.
  ![](./images/9hellophplocation.png)
 
- We then used the previous vulnerability *LFI* to get the *hello.php* file.
+### We then used the previous vulnerability *LFI* to get the *hello.php* file.
  ```
  http://www.smol.thm/wp-content/plugins/jsmol2wp/php/jsmol.php?isform=true&call=getRawDataFromDatabase&query=php://filter/resource=../../hello.php
 
  ```
  
 ![](./images/10base64.png)
-We discovered a *hello_dolly* function that has encoded content, so we decoded it using *CyberChef*.
+### We discovered a *hello_dolly* function that has encoded content, so we decoded it using *CyberChef*.
 ![](./images/11decode.png)
 
-It decoded to *escapestring*, so we decoded it further to plain text.
+### It decoded to *escapestring*, so we decoded it further to plain text.
 ![](./images/12escapestring.png)
 
-We found a *cmd* parameter, and after some research we learned that to use this function we need to be on the wp-admin page, so we navigated to this link and tried to execute a command.
+### We found a *cmd* parameter, and after some research we learned that to use this function we need to be on the wp-admin page, so we navigated to this link and tried to execute a command.
 ```
 http://www.smol.thm/wp-admin/index.php?cmd=whoami
 ```
 
 ![](./images/13cmdwhoami.png)
 
-Here we can execute shell command and after trying many ways using https://www.revshells.com/ , we got reverse shell with *netcat* with this payload:
+### Here we can execute shell command and after trying many ways using https://www.revshells.com/ , we got reverse shell with *netcat* with this payload:
 ![](./images/14revshell.png)
-We got a reverse shell, but we didn't have permission to access any user's files. However,
-using *wappalyzer* extension we found MySQL database service, so we can access the databases 
+### We got a reverse shell, but we didn't have permission to access any user's files. However,
+### using *wappalyzer* extension we found MySQL database service, so we can access the databases 
 ![](./images/15sql1.png)
-we found the *wp_users* table and I guessed that it contains user credentials,
-and that was right.
+### we found the *wp_users* table and I guessed that it contains user credentials,
+### and that was right.
  ![](./images/16sql2.png)
- we collected the users with their hashes to crack them with *john and ripper*
+### we collected the users with their hashes to crack them with *john and ripper*
  
  ![](./images/17hashes.png)
- It only cracked one hash for user named *diego*
+### It only cracked one hash for user named *diego*
  ![](./images/18diego.png)
  Now we have this user and his password, so we can switch to him with *su diego*, and when we listed his files we got the *user.txt* flag.
  ![](19.1%20su%20diego.png)
-Now we want to escalate our privilege to be root 
+### Now we want to escalate our privilege to be root 
  
 
 ---
 ## ⬆️ Privilege Escalation
-The current user is *diego*, but this user doesn't have permission to run sudo. We ran *linpeas.sh* but didn't find anything interesting, so we tried to access other users' directories. We managed to access the directory of a user named *think* and found his SSH private key, which we can use to log in as that user.
+### The current user is *diego*, but this user doesn't have permission to run sudo. We ran *linpeas.sh* but didn't find anything interesting, so we tried to access other users' directories. We managed to access the directory of a user named *think* and found his SSH private key, which we can use to log in as that user.
 ![](19.2%20diego%20access%20on%20think%20dir.png)
 
 ![](20ssh%20think%20and%20zip%20file.png)
 
-After logging in as this user, we found a zip file but couldn't unzip it because it belongs to a user named *gege*.
- Now we want to access as *gege* we tried *su gege* and it worked , we can switch to *gege* from *think* and now we will unzip this file but it has a password that we don't have
+### After logging in as this user, we found a zip file but couldn't unzip it because it belongs to a user named *gege*.
+### Now we want to access as *gege* we tried *su gege* and it worked , we can switch to *gege* from *think* and now we will unzip this file but it has a password that we don't have
 ![](22fail%20unzip.png)
 
-Now we only have one way to get this file on our machine by upload this file to python server and download it on our machine by *wget* 
+### Now we only have one way to get this file on our machine by upload this file to python server and download it on our machine by *wget* 
 ![](23%20python%20server.png)
 
 ![](24wget.png)
-Then we have to convert this zip file to hash password because it's a formula can *john and ripper* tool can understand by *zip2john* tool
+### Then we have to convert this zip file to hash password because it's a formula can *john and ripper* tool can understand by *zip2john* tool
 ![](25zip2john.png)
 
-Now we can crack this hash with *john and ripper*
+### Now we can crack this hash with *john and ripper*
 ![](26zip%20pass.png)
-After access this directory we got *wp-config* file which has interesting credentials
+### After access this directory we got *wp-config* file which has interesting credentials
 ![](27%20wp-config%20xavi.png)
-We got user named *xavi* and his password which can access with these credentials then we tried to show his sudo permissions with *sudo -l* as we tried with all previous users 
+### We got user named *xavi* and his password which can access with these credentials then we tried to show his sudo permissions with *sudo -l* as we tried with all previous users 
 ![](28%20xavi%20sudo.png)
-This time we discovered that xavi can execute all sudo commands as a root so, we can now access root pass and get *root.txt* flag
+### This time we discovered that xavi can execute all sudo commands as a root so, we can now access root pass and get *root.txt* flag
 ![](29%20root%20flag.png)
 
 ---
