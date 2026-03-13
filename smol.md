@@ -111,36 +111,36 @@ http://www.smol.thm/wp-admin/index.php?cmd=whoami
 ### It only cracked one hash for user named *diego*
  ![](./images/18diego.png)
  Now we have this user and his password, so we can switch to him with *su diego*, and when we listed his files we got the *user.txt* flag.
- ![](19.1sudiego.png)
+ ![](./images/19.1sudiego.png)
 ### Now we want to escalate our privilege to be root 
  
 
 ---
 ## ⬆️ Privilege Escalation
 ### The current user is *diego*, but this user doesn't have permission to run sudo. We ran *linpeas.sh* but didn't find anything interesting, so we tried to access other users' directories. We managed to access the directory of a user named *think* and found his SSH private key, which we can use to log in as that user.
-![](19.2diegoaccessonthinkdir.png)
+![](./images/19.2diegoaccessonthinkdir.png)
 
-![](20sshthinkandzipfile.png)
+![](./images/20sshthinkandzipfile.png)
 
 ### After logging in as this user, we found a zip file but couldn't unzip it because it belongs to a user named *gege*.
 ### Now we want to access as *gege* we tried *su gege* and it worked , we can switch to *gege* from *think* and now we will unzip this file but it has a password that we don't have
-![](22failunzip.png)
+![](./images/22failunzip.png)
 
 ### Now we only have one way to get this file on our machine by upload this file to python server and download it on our machine by *wget* 
-![](23pythonserver.png)
+![](./images/23pythonserver.png)
 
-![](24wget.png)
+![](./images/24wget.png)
 ### Then we have to convert this zip file to hash password because it's a formula can *john and ripper* tool can understand by *zip2john* tool
 
-![](25zip2john.png)
+![](./images/25zip2john.png)
 ### Now we can crack this hash with *john and ripper*
-![](26zippass.png)
+![](./images/26zippass.png)
 ### After access this directory we got *wp-config* file which has interesting credentials
-![](27wp-configxavi.png)
+![](./images/27wp-configxavi.png)
 ### We got user named *xavi* and his password which can access with these credentials then we tried to show his sudo permissions with *sudo -l* as we tried with all previous users 
-![](28xavisudo.png)
+![](./images/28xavisudo.png)
 ### This time we discovered that xavi can execute all sudo commands as a root so, we can now access root pass and get *root.txt* flag
-![](29rootflag.png)
+![](./images/29rootflag.png)
 
 ---
 
